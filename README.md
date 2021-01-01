@@ -22,7 +22,7 @@
 ### Day 1 计划
 
 1. 学习 Scala 及 Chisel
-2. 配置 Linux 下的 Xilinx 开发板的开发环境
+2. 配置 Linux 下的 FPGA 开发板的开发环境
 3. 尝试写一些简单的 Chisel 小程序，然后烧到 FPGA 板子上并调试
 
 #### 学习资料
@@ -48,4 +48,39 @@
 说得有点多了，嗯...就先这样吧
 
 2021，我来了
+
+## Day 1 2021-01-01
+
+Chisel 基础学习完成，还没开始上手敲代码。今天完成的主要工作是配置 Chisel 环境并编译 Fuxi 处理器
+
+`sbt` 第一次编译好慢，下载 Xilinx ISE DS 好慢，好多时间都用在这上面了，我应该一边配环境一边学习的
+
+我之前有买过 FPGA 的板子，也参考一些书籍写过 MIPS 的 CPU，但是只在电脑上仿真过，并没有烧到板子上调试，所以这方面我也不是很懂，要从头开始学起
+
+根据我参考的书，应该做的事情如下：
+
+1. 完成 CPU 的代码（废话）
+2. 为 CPU 编写 SoC 代码（不然只有处理器没有内存没有 ROM 什么的也用不成）（个人理解）
+3. 安装 Xilinx ISE WebPACK 和 UrJTAG 软件
+   * 其中，ISE WebPACK 包括 ISE Project Navigator 和 iMPACT，作用分别为：将 Verilog 源程序转换为 BIT 文件、将 BIT 文件转换成 SVF 文件，及将 BIT 文件转换为 MCS 文件再转换为 SVF 文件
+   * UrJTAG 的作用为，将 BIT 直接生成的 SVF 文件写入 FPGA，并将 MCS 文件生成的 SVF 文件写入 ROM
+4. 这样似乎就可以运行了(?)
+
+但是我又在考虑要不要先在本地仿真来完善功能，比如编译一下 OpenSBI 或者 RustSBI，用之前写 CPU 的小工具把 SBI 的可执行文件转化成可以导入 Fuxi 处理器运行的（存着十六进制指令的）文本文件
+
+思考了一下，也看了下这个 Project 中导师的预期目标，还是决定烧到 FPGA 里面会比较好一些
+
+本来想第一个移植 luojia 大佬的 RustSBI，结果发现 release 里面只有 QEMU 和 K210 的版本，所以我先用 OpenSBI 试试 Fuxi SoC 的基本功能，等 OpenSBI 适配好了再尝试移植 RustSBI 试试～
+
+然而...安装 Xilinx ISE WebPACK 的时候发现，我的 Linux 空间不够用了，这软件需要 23G，但是我的系统只有 1G 了，所以被迫去用 Windows 了，而且 Scala 和 Chisel 的环境还需要再重新配一遍...
+
+先 push 一下，今晚还有些事情，定一下明天的计划就先撤了，虽然今天的计划没怎么完成...
+
+### Day 2 计划
+
+1. 在 Windows 下配置 Chisel 以及 FPGA 所需环境
+2. 将 Fuxi SoC 及 OpenSBI 烧录到 FPGA 板子上
+3. 调试运行 OpenSBI
+
+前两条估计很快就能解决，第三条战线可能会比较长了
 
