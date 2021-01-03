@@ -110,3 +110,49 @@ Chisel 基础学习完成，还没开始上手敲代码。今天完成的主要�
 3. 有必要的话，将 OpenSBI 编译到 RV32ima 平台
 4. 调试运行 OpenSBI
 
+### Day 3 2021-01-03
+
+配环境越来越熟练了，只用了一个小时就装好了 Linux 和 `sbt` 以及 ISE WebPACK，然后把 Fuxi SoC 编译成 Verilog 代码，综合没有问题，布线过程出了些错误，具体报错如下：
+
+```
+ERROR:Pack:2309 - Too many bonded comps of type "IOB" found to fit this device.
+ERROR:Map:237 - The design is too large to fit the device.  Please check the Design Summary section to see which resource requirement for
+   your design exceeds the resources available in the device. Note that the number of slices reported may not be reflected accurately as
+   their packing might not have been completed.
+```
+
+查了下 Design Summary，发现：
+
+```
+IO Utilization:
+  Number of bonded IOBs:                       664 out of     160  415% (OVERMAPPED)
+```
+
+由内容并结合 Google 查询，我认为报错的意思是，代码中的 IO 端口数量超过了 FPGA 板子可以设置的数量，但是如何解决，我一点头绪也没有...
+
+最终经过了半个小时的 Google，找到了这样一个帖子：[Using Xilinx ISE 14.7, PCIe core implementation problem](https://www.edaboard.com/threads/using-xilinx-ise-14-7-pcie-core-implementation-problem.356126/)
+
+4 楼有解释可能的原因，可能是因为一些需要写在内部的 IO 端口，都给放外边去了
+
+经过一阵思考，我认为，整个 CPU 需要被 SoC 封装起来，目前不需要有对外的接口，但是 SoC 代码我看不懂，也不知道怎么用...就很尴尬
+
+我还是去翻书吧，一些自制 CPU 的书籍，参考一下最上层的代码应该怎么封装
+
+有必要的话，也可以参考一下 Rocket 或者 BOOM 的代码，如果里面有可以参考的内容的话...
+
+20210103 傍晚补充：我觉得应该装一个 Vivado，而不是 ISE，然而 Vivado 用 Windows 就可以，没必要把电脑重装，也没必要买新电脑...
+
+罢了罢了，Linux 开发更舒服，而且新电脑也可以玩赛博朋克，计划通(x
+
+20210103 晚上补充：Vivado 装完了，可以直接打开 `soc` 目录里的工程文件，解决了大部分问题，但是综合报了一大堆错，而且我发现最新版 Vivado 并不支持我 Spartan-6 的板子...
+
+查了下，原话是这样的：
+
+```
+The Vivado tool has been created for the 7 Series devices (Virtex-7, Kintex-7, Artix-7, and Zynq-7000). 
+
+To support the Spartan-6 devices (or any non 7 Series devices), you will need to use the latest ISE design tools, which work best regardless of the complexity of the design.
+```
+
+好了，买新板子还是折腾 ISE 二选一吧
+
