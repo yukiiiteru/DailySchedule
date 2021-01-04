@@ -110,7 +110,7 @@ Chisel 基础学习完成，还没开始上手敲代码。今天完成的主要�
 3. 有必要的话，将 OpenSBI 编译到 RV32ima 平台
 4. 调试运行 OpenSBI
 
-### Day 3 2021-01-03
+## Day 3 2021-01-03
 
 配环境越来越熟练了，只用了一个小时就装好了 Linux 和 `sbt` 以及 ISE WebPACK，然后把 Fuxi SoC 编译成 Verilog 代码，综合没有问题，布线过程出了些错误，具体报错如下：
 
@@ -155,4 +155,64 @@ To support the Spartan-6 devices (or any non 7 Series devices), you will need to
 ```
 
 好了，买新板子还是折腾 ISE 二选一吧
+
+### Day 4 计划
+
+1. 买板子，然后等收货
+2. 编译 YuLang
+3. 用 YuLang 编译 GeeOS，并在 QEMU 里跑起来
+
+## Day 4 2021-01-04
+
+昨晚下单了新板子，Artix-7 系的，没想到今天上午就发货了，意想不到的快。那么趁新主机和新板子都还没到的时间，先折腾下 YuLang 好了
+
+此外，装 VS Code 的时候有点新发现，MaxXing 大佬已经制作了 YuLang 的 VS Code 高亮插件，可以用 VS Code 搞开发了
+
+但是，编译 YuLang 的过程中也遇到了一些问题，YuLang 的 README 里写需要用 `llvm 8.0 or later`，但是我用的 LLVM 11，遇到了一些小问题，比如：
+
+1. `src/back/llvm/objgen.cpp` 需要再 `#include "llvm/Support/Host.h"`；
+2. `src/back/llvm/generator.cpp` 调用的 `CreateCall` 函数参数更新了，需要把 `llvm::Value *` 改成 `llvm::Callee *`，把 `std::Vector` 改成 `llvm::ArrayRef`；
+
+20210104 下午补充：换成 LLVM 10 就没有问题了，看来是 LLVM 11 的新 feature，但是又遇到一些新的问题：
+
+1. `make[3]: /usr/local/opt/llvm/bin/llc: 没有那个文件或目录`，解决方法：修改 `toolchain.mk`，把 `export LLC := $(LLVM_HOME)/llc $(LLCFLAGS)` 改成 `export LLC := llc $(LLCFLAGS)`
+2. `clang` 没装会报个错，小问题
+3. 装上 `clang` 之后会报：
+   ```
+   making example "array\_test"...
+   /usr/bin/ld: /home/yukiteru/github/YuLang/build/obj/examples/array\_test.yu.o: relocation R\_X86\_64\_32 against symbol `out' can not be used when making a PIE object; recompile with -fPIE
+   /usr/bin/ld: /home/yukiteru/github/YuLang/build/libyu.a(io.yu.o): warning: relocation in read-only section `.text'
+   clang-11: error: linker command failed with exit code 1 (use -v to see invocation)
+   ```
+   是用 `clang` 编译时出现的链接问题，解决方法：在 `toolchain.mk` 里，给 `LDFLAGS` 加上 `-no-pie`
+
+解决掉这些问题后，`yuc` 就成功被编译出来了～然后顺手 `ln -s` 到 `~/.local/bin` 里面，运行起来也方便
+
+但是——GeeOS 的编译又出了不少问题：
+
+1. `mkfs` 工具使用了 C++17 的类 `string_view`，并将 `string_view` 隐式传入需要 `string` 参数的函数，然而编译器报了错
+   解决方法：将 `string_view` 变量套上 `string()` 或者在其后面添加 `.data()`，推荐后者
+2. LLVM 工具链的路径问题，改 `toolchain.mk` 即可，还有找不到 `ld.lld`，装一个 `lld` 就好了
+3. `objdump` 识别不了 RV32 的 elf 文件，给 `objdump` 加上 prefix 即可
+4. `bin2coe.py` 无法直接运行，可能是我终端的问题，在 `src/Makefile` 里给加上 `python3` 就好了
+
+经过以上改动，`geeos.elf` 就编译出来了，但是运行又出了问题。`cd` 进 `build`，然后照 README 写的命令运行，会报：
+
+```
+rom: requested regions overlap (rom phdr #0: build/geeos.elf. free=0x000000008000f2c0, addr=0x0000000080000000)
+qemu-system-riscv32: rom check and register reset failed
+```
+
+网上查了下，看到了 openEuler 那边的 [issue](https://bugs.launchpad.net/qemu/+bug/1429841)，这可能是最新版 QEMU 才会出的问题，好像 4.x 版本的 QEMU 不会有问题
+
+我是不是不该用 ArchLinux 的，LLVM 版本太新了，QEMU 版本也太新了...
+
+唉，明天再重装系统吧，换成 Ubuntu 20.04，或者 18.04 也行，毕竟比赛最终编译是在这上面进行的
+
+### Day 4 计划
+
+1. 重装系统，把 ArchLinux 换成 Windows 10 + Ubuntu 18.04 (?)
+2. 编译 YuLang + GeeOS，然后在 QEMU 上跑起来
+3. fork 一份 YuLang 和 GeeOS，把一些跟比赛无关的内容，比如 `Makefile` 啥的改改，提交一份 PR，比赛有关的就先放自己仓库里，等结束了再提交
+4. 把 GeeOS 在 QEMU 里运行起来好像也不是什么难事，那就先学下 YuLang，在 FPGA 板子到货之前先写着线程调度
 
