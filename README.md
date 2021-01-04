@@ -2,7 +2,8 @@
 
 ## 已完成内容
 
-* 暂无
+* (Day 3) YuLang 编译成功，可以正常使用
+* (Day 3) GeeOS 编译成功
 
 ## Before 2021
 
@@ -156,6 +157,10 @@ To support the Spartan-6 devices (or any non 7 Series devices), you will need to
 
 好了，买新板子还是折腾 ISE 二选一吧
 
+### Day 3 进展
+
+知道了 Fuxi SoC 的使用方法，也知道了我的板子不适合拿来搞这个...
+
 ### Day 4 计划
 
 1. 买板子，然后等收货
@@ -208,6 +213,11 @@ qemu-system-riscv32: rom check and register reset failed
 我是不是不该用 ArchLinux 的，LLVM 版本太新了，QEMU 版本也太新了...
 
 唉，明天再重装系统吧，换成 Ubuntu 20.04，或者 18.04 也行，毕竟比赛最终编译是在这上面进行的
+
+### Day 3 进展
+
+1. YuLang 编译成功，看起来一切正常
+2. GeeOS 编译成功，但是运行不起来
 
 ### Day 4 计划
 
