@@ -4,6 +4,7 @@
 
 * (Day 3) YuLang 编译成功，可以正常使用
 * (Day 3) GeeOS 编译成功
+* (Day 4) GeeOS 运行成功
 
 ## Before 2021
 
@@ -226,3 +227,33 @@ qemu-system-riscv32: rom check and register reset failed
 3. fork 一份 YuLang 和 GeeOS，把一些跟比赛无关的内容，比如 `Makefile` 啥的改改，提交一份 PR，比赛有关的就先放自己仓库里，等结束了再提交
 4. 把 GeeOS 在 QEMU 里运行起来好像也不是什么难事，那就先学下 YuLang，在 FPGA 板子到货之前先写着线程调度
 
+## Day 4 2021-01-05
+
+今天的时间都用在装系统上了。装了 Ubuntu 18.04，发现 `cmake` 版本太旧、`vim` 版本太旧、`g++` 默认版本太旧，受不了折腾这些东西，我就换了 Ubuntu 20.04
+
+Ubuntu 20.04 基本一切正常，除了`apt` 里面的 QEMU 没有 RISCV 版本，我又自己从源码编译了一份 `qemu-system-riscv32`，4.2.1 的版本，运行一切正常，唯一的问题是我忘记该怎么退出 QEMU 了...
+
+然后我又装上了 Windows，又在 Windows 下挂机装 Vivado，顺便学一下 YuLang。直到现在 Vivado 都还没装完，先睡觉！
+
+明天估计我的板子就能到了，但是电脑还要大概一周才能到。就先用我的电脑凑合整吧，熟悉一下 Vivado 先，等新电脑到了就全部在 Linux 上开发了，还是 Linux 搞开发舒服啊
+
+（另外，有机会可以学一下 Vim 插件怎么写，我整一个 Vim 的 YuLang 高亮插件也不错，不过自动补全可能有点难
+
+### Day 4 进展
+
+1. GeeOS 运行成功
+2. fork 了 YuLang 和 GeeOS，并改了下 `Makefile` 啥的，先不 PR 了，感觉没啥必要(?)
+
+### Day 5 计划
+
+1. 熟悉 Vivado 的使用
+2. 生成 Fuxi SoC 和 OpenSBI 的 SVF 文件
+3. 板子收货之后把 SVF 文件烧进去，进度快的话就先调试着
+
+线程调度之后再说吧，昨天的计划就先推迟一下(x
+
+此外我仔细想了一下，移植 RustSBI 也不是不行，照 QEMU 版本编译然后烧进去理论上是可以的，但是可能有点小问题
+
+Rust 的 RISC-V 32 环境似乎只有 RV32imac 和 RV32gc，而 Fuxi 处理器目前只支持 RV32im，并不支持 C 扩展，所以暂时是没办法使用的，等写完了 C 扩展再移植 RustSBI 也不迟
+
+OpenSBI 必须自己编译了，在编译参数里声明一下用 RV32im 指令编译，这样应该就可以勉强运行起来，如果 `mstatus` 寄存器不出什么问题的话
