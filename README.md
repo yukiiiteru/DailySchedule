@@ -255,9 +255,9 @@ Ubuntu 20.04 基本一切正常，除了`apt` 里面的 QEMU 没有 RISCV 版本
 
 此外我仔细想了一下，移植 RustSBI 也不是不行，照 QEMU 版本编译然后烧进去理论上是可以的，但是可能有点小问题
 
-Rust 的 RISC-V 32 环境似乎只有 RV32imac 和 RV32gc，而 Fuxi 处理器目前只支持 RV32im，并不支持 C 扩展，所以暂时是没办法使用的，等写完了 C 扩展再移植 RustSBI 也不迟
+Rust 的 RISC-V 32 环境似乎只有 RV32imac 和 RV32gc，而 Fuxi 处理器目前只支持 RV32ima，并不支持 C 扩展，所以暂时是没办法使用的，等写完了 C 扩展再移植 RustSBI 也不迟
 
-OpenSBI 必须自己编译了，在编译参数里声明一下用 RV32im 指令编译，这样应该就可以勉强运行起来，如果 `mstatus` 寄存器不出什么问题的话
+OpenSBI 必须自己编译了，在编译参数里声明一下用 RV32ima 指令编译，这样应该就可以勉强运行起来，如果 `mstatus` 寄存器不出什么问题的话
 
 ## Day 6 2021-01-06
 
@@ -309,5 +309,33 @@ OpenSBI 必须自己编译了，在编译参数里声明一下用 RV32im 指令�
 ### Day 7 计划
 
 1. 前面的步骤都完成了，明天真的该把 SoC 烧到板子上了
-2. 在 Linux 下编译 RV32im 的 OpenSBI，烧到板子上
+2. 在 Linux 下编译 RV32ima 的 OpenSBI，烧到板子上
 3. debug
+
+## Day 7 2021-01-07
+
+参考 MicroBlaze 的文档，找到了生成 BIT 文件并烧写到 FPGA 上的步骤，但是奇了个怪了，综合、布线都不报错，生成 BIT 文件报没有布线：
+
+```
+ERROR: [Common 17-70] Application Exception: Unable to get BIT file from implementation run. Please ensure implementation has been run all the way through Bitstream generation. Aborting write_hw_platform..
+```
+
+20210107 下午补充：布线没报错，但是也没成功，其实要等很久之后才会报错，报错内容看不懂，也查不出来
+
+有没有必要把 SoC 重新做一遍呢...
+
+20210107 傍晚补充：有必要，毕竟板子不同，板子上的硬件不同，硬件对应的管脚号也不同。就算不重做，也要把 `xdc` 文件重新写一遍
+
+20210107 晚上补充：开始重做！
+
+20210107 深夜补充：放弃重做！先照 MicroBlaze 的教程熟悉一下 SoC 的构建方法！
+
+### Day 7 进展
+
+* 对 SoC 构建的基本操作相对熟悉一些了
+
+综合没有问题，布线还是有问题，或许一些约束和一些模块需要针对特定板子重写
+
+### Day 8 计划
+
+1. 完成 Fuxi SoC 在我的板子上的构建
