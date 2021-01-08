@@ -339,3 +339,47 @@ ERROR: [Common 17-70] Application Exception: Unable to get BIT file from impleme
 ### Day 8 计划
 
 1. 完成 Fuxi SoC 在我的板子上的构建
+
+## Day 8 2021-01-08
+
+今天开始参考 Fuxi SoC 在龙芯 FPGA 上的配置以及 MicroBlaze SoC 在我的 FPGA 上的配置
+
+我觉得大部分配置都是可以参考的，按键、LED 还有最麻烦的 HDMI 需要重写，因为龙芯是用 VGA 的，ALINX 是用 HDMI 的，这里接口和协议都不一样，不过好像不是必须的，先跳过这部分也行
+
+按键和 LED 先给用 wire 连上，HDMI 先略过，之后再参考板子给的 demo 和 Fuxi 的 VGA 写 HDMI
+
+进行到现在，一个小问题是：大部分 IP Core 的功能我看一眼就知道是做什么的，但是我很难理解 AXI Interconnect 这个 IP Core 的使用方法，大体查了一下，是使用 AXI4 总线协议进行总线仲裁的，这就涉及到我的知识盲区了，因为我学的组成原理对总线仲裁只是停留在原理，并没有深入到具体的硬件、协议层面
+
+AXI Interconnect 参考资料：
+
+1. [AXI Interconnect](https://www.xilinx.com/products/intellectual-property/axi_interconnect.html)
+2. [总线仲裁 - 百度百科](https://baike.baidu.com/item/%E6%80%BB%E7%BA%BF%E4%BB%B2%E8%A3%81)
+
+算了，就强行连吧...
+
+此外，我在万能的 bilibili 上找到了用 MicroBlaze 连 HDMI 输出视频的一个小教程：[Nexys Video 基于 Microblaze 的 OV5640 视频输出](https://www.bilibili.com/read/cv5242447/)，但是这个似乎用了几个我找不到的 IP Core；还有，我也在板子附送的 demo 里找到了 HDMI 输出的样例，但是先不折腾了吧，先老老实实折腾 SoC
+
+20210108 傍晚补充：经过了一天的折(连)腾(线)，虽然连生成 Wrapper 都没有完成，但是我了解了 SoC 的构造，这简直是太妙了，一个 SoC 就是一个完整的主板，总线`sys_bus`、南北桥(`peri_bus`, `mem_bus`)、中断发生器、内存、显卡、网卡，一应俱全，虽然这里不应该称作显卡、网卡，因为并没有实际的卡存在，只是嵌入到板子上的电路
+
+此外我也庆幸自己没有选择使用古老的 Spartan-6 系 FPGA 配合 ISE 自己写 SoC，每个 IP Core 都够我写半天的（除了 `Constant`）
+
+经过这么久的折腾，我也知道如何移植 SoC 了：把板子上没有的模块（如 VGA）剔除掉、把板子上有的模块（如 HDMI）加上、把板子上都有的但不同模块（如晶振、内存）进行修改、适配
+
+虽然上面都是废话，但是也确实是我走了一天的弯路所得出来的结论
+
+今天也是失败的一天呢
+
+### Day 8 进展
+
+* 对 SoC 的基本结构相对熟悉一些了
+
+但是我也发现前几天我的 repo 里 commit 的代码不能生成 Block Design，打算最近再整一份可以生成 bd 的，适配我板子的 project
+
+20210108 深夜补充：重新 commit 了一遍，好像跟之前一样，还是不能生成 bd...
+
+### Day 9 计划
+
+1. 让 SoC 可以生成 Block Design
+2. 完成 Fuxi SoC 在我板子上的构建
+
+（题外话：我的计划从一个远大的目标变得越来越...嗯...不那么远大了，但是这也说明我的进展在不断深入，我的工作在不断细化，这也是好事）
