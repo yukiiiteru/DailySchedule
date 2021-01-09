@@ -4,8 +4,7 @@
 
 * (Day 4) YuLang 编译成功，可以正常使用
 * (Day 4) GeeOS 编译成功
-* (Day 5) GeeOS 运行成功
-* (Day 6) Fuxi SoC 综合、布线成功
+* (Day 5) GeeOS 在 QEMU 中运行成功
 
 ## Before 2021
 
@@ -383,3 +382,33 @@ AXI Interconnect 参考资料：
 2. 完成 Fuxi SoC 在我板子上的构建
 
 （题外话：我的计划从一个远大的目标变得越来越...嗯...不那么远大了，但是这也说明我的进展在不断深入，我的工作在不断细化，这也是好事）
+
+## Day 9 2021-01-09
+
+偶然在 GitHub 发现了 [基于龙芯 FPGA 开发板的计算机系统综合实验](https://github.com/oscourse-tsinghua/LoongsonCsprj2020)，感觉可能有一些参考价值
+
+然后，又经过了一天的连线，在 CPU 没有连接外设的情况下，可以生成 BD 并综合了，但是布线还是有一些问题，会报错：`DRC PDRC-34` 和 `DRC PDRC-43`，有两个时钟频率不匹配，应该不难解决
+
+然而，Google 出的结果没有参考价值，龙芯板子上的 Fuxi SoC 参考了并没有起作用，板子附送的 demo 参考价值也不大
+
+报错内容主要说的是，计算出的 MMCM 和 PLL 的 VCO 频率（`CLKIN1_PERIOD`）不在其要求的周期范围内
+
+计算公式为：`CLKIN1_PERIOD = (CLKFBOUT_MULT_F * 1000 / (CLKINx_PERIOD * DIVCLK_DIVIDE))`
+
+需要调整 MMCM 和 PLL 配置中的 输入周期(`CLKINx_PERIOD`)、乘法因子(`CLKBOUT_MULT_F`) 或者 除法因子(`DIVCLK_DIVIDE`)，使得两者的 VCO 频率落在设备的范围内
+
+一晚上过去了，并没有解决，因为不知道该调整什么地方...
+
+20210109 深夜补充：应该调整 Clocking Wizard 的配置，改 Output Clocks 部分让 MMCM 变化，应该就能解决了
+
+今晚大部分时间都用在生成输出(Generate Block Design)、综合和布线上了，在跑程序的过程中顺便了刷了一下哈工大的编译原理，毕竟还是要折腾 YuLang 的
+
+### Day 9 进展
+
+* 半成品 SoC 生成输出、综合成功，卡在布线上
+* 学习了编译原理的绪论部分以及词法分析的前半部分
+
+### Day 10 计划
+
+1. 解决 Error，让半成品 SoC 可以布线
+2. 完善 SoC，尽量让完整的 SoC 可以生成 Bitstream
