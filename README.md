@@ -412,3 +412,59 @@ AXI Interconnect 参考资料：
 
 1. 解决 Error，让半成品 SoC 可以布线
 2. 完善 SoC，尽量让完整的 SoC 可以生成 Bitstream
+
+## Day 10 2021-01-10
+
+半成品 SoC 布线成功！而且是 commit 之后重新 clone 的 project！这次真的没有问题了吧，布线之后都能看到线网了
+
+好了！开始加外设！
+
+报错 `Runs 36-527`，`soc.gen` 目录下的一个以太网相关的文件缺失，但是这个目录下的文件不应该是自动生成的吗...
+
+然而，百度出的解决方案没用，再次卡住，只能先把以太网模块删掉了
+
+SPI 模块设置管脚的时候也注意到有一些名字不对应的问题，比如 Vivado 中需要的是：`SPI_FLASH_ss_io`, `SPI_FLASH_sck_io`；而板子文档中给的名字是：`QSPI_CLK`, `QSPI_CS`，经过一段时间的查询，我找到了 Xilinx 的[文档](https://www.xilinx.com/support/documentation/application_notes/xapp586-spi-flash.pdf)，里面给出管脚的别名，这才解决 SPI 的问题
+
+此外，我在查文档的时候发现 SD Card 有 SPI 模式，可以当作一个 SPI 进行读写操作，实在是妙啊
+
+然后，综合一切正常，布线报错，`DRC UTLZ-1`，看了下字面意思是 LUT（逻辑单元?）不够用了，当前的设计需要 20828 个 LUT，但是目标设备中只有 20800 个，把 AXI Interconnect 的 优化策略从最高性能改成常规，甚至改成最小面积都没用
+
+完整的错误内容：
+
+```
+[DRC UTLZ-1] Resource utilization: LUT as Logic over-utilized in Top Level Design (This design requires more LUT as Logic cells than are available in the target device. This design requires 20828 of such cell types but only 20800 compatible sites are available in the target device. Please analyze your synthesis results and constraints to ensure the design is mapped to Xilinx primitives as expected. If so, please consider targeting a larger device. Please set tcl parameter "drc.disableLUTOverUtilError" to 1 to change this error to warning.)
+```
+
+卡在这了，就很难受
+
+拿原版 Fuxi SoC 修改，遇到 MII 有几个管脚端口名字不对应，又查到一个 Xilinx 的[文档](https://www.xilinx.com/support/documentation/ip_documentation/tri_mode_ethernet_mac/v9_0/pg051-tri-mode-eth-mac.pdf)，但是管脚始终是缺三个...
+
+最终分配管脚，
+
+* MII 缺 `MII_col`, `MII_crs`, `MII_rx_er`
+* SD 卡的 SPI 缺 `SPI_ss_io`，可能需要改 
+* SPI Flash 的 `SPI_sck_io` 的 L12 管脚分配不上
+* UART 的管脚只有 `UART_rxd` 和 `UART_txd`，但是需要的管脚共有 14 个，少 12 个，可能需要改
+
+MII 可以没有，不上网也没关系；SD 卡可以没有，不读 SD 卡也没关系，UART 可以没有，不读 UART 也没关系，但是没有 SPI Flash，固件往哪整...
+
+而且最后还是报错，`DRC UTLZ-1`，一样的错误
+
+我在考虑要不要再买个板子，这次不用 XC7A35T 芯片的 FPGA 了，换 XC7A100T 芯片，这个 LUT 够多，而且 ALINX 用 XC7A100T 芯片的板子有 VGA 接口，MII 部分 `MII_col` 和 `MII_crs` 还有 `MII_rx_er` 都有，UART 部分只有 `RXD` 和 `TXD`，这个应该是需要改配置了
+
+我有注意到 demo 里给的 MicroBlaze 用 UART 的 IP Core 是 AXI Uartlite，而 Fuxi SoC 默认用的是 AXI UART 16550，这个应该换一下 IP Core 就好
+
+现在的板子已经申请退款了，明天开始用新板子的配置开发，等布线啥的差不多了再下单也不迟。XC7A100T 芯片的 LUT 是 XC7A35T 的三倍多，总不会再不够用了吧
+
+羡慕龙芯的板子，直接上 XC7A200T 了
+
+### Day 10 进展
+
+* 发现自己的板子 LUT 不够用，已申请退货
+* 更加熟悉 SoC 的构建过程了
+* 学完了编译原理的词法分析和正则表达式部分
+
+### Day 11 计划
+
+1. 在 XC7A100T 芯片上，参考 ALINX 板子的管脚配置，重新移植 Fuxi SoC
+2. 综合！布线！
