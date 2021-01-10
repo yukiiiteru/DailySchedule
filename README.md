@@ -458,6 +458,14 @@ MII 可以没有，不上网也没关系；SD 卡可以没有，不读 SD 卡也
 
 羡慕龙芯的板子，直接上 XC7A200T 了
 
+20210110 深夜补充：查了一晚上关于 HDMI 的资料，发现了一篇[很有价值的文章](https://numato.com/kb/simple-hdmi-vga-framebuffer-design-example-on-neso-artix-7-fpga-board/)，写了一个用 MicroBlaze 输出 HDMI 的 demo，用 AXI4-Stream to Video Out 从 AXI4-Stream 转成 RGB，再写一个 rgb2dvi 模块，直接对外输出 tmds 和 tmdsb 就好了（其中，AXI4-Stream to Video Out 这一 IP Core 需要由 Video Timing Controller 传入一个 vtiming_out 信号）
+
+HDMI 还是 VGA，这还是个问题。不过，现在选输出接口是不是有点太早了，毕竟没有 BIOS，也没法往屏幕上画黑框框写字
+
+等等，突然想起 xqz 大佬的毕设，用 YuLang 写了个[幻灯片播放器](https://github.com/MaxXSoft/Fuxi-Soft/tree/master/src/slideshow)，应该是用的 DMA 方式(?)，直接往内存里写，就可以让显示器实时显示。在 YuLang 里还有 `lib.soc` 的标准库，直接往 `VGA_ADDR ` 这一地址 `writeWord`，简直是太妙了
+
+所以，我选择 VGA
+
 ### Day 10 进展
 
 * 发现自己的板子 LUT 不够用，已申请退货
