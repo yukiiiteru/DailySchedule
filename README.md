@@ -5,6 +5,7 @@
 * (Day 4) YuLang 编译成功，可以正常使用
 * (Day 4) GeeOS 编译成功
 * (Day 5) GeeOS 在 QEMU 中运行成功
+* (Day 13) Fuxi SoC 生成 bitstream 成功
 
 ## Before 2021
 
@@ -535,4 +536,49 @@ BD 和管脚配好了，综合没有报错，布线报了错：`DRC BIVC-1`，�
 
 1. 尽量布线完成
 2. 布线成功的话，学习如何生成 bitstream，然后下单
+
+## Day 13 2021-01-13
+
+实践证明，MIG 的配置需要改，Clocking Wizard 的配置也需要改。毕竟报错是报在 MIG 上的，错误内容是跟 Clocking Wizard 有关的，两者都有问题
+
+今天经过一上午的折腾终于布线成功了，中午歇会儿，下午研究生成 bitstream，顺利的话晚上下单板子，然后等板子到货期间折腾一下 OpenSBI 和 GeeOS
+
+晚上的话，需要跟学校刷牛客的题目，为下学期的 ICPC 做准备。有必要的话，去 AcWing 报一下网课也可以（晚上补充：老师记错了，是 15 号的练习赛）
+
+生成 bitstream 一切正常，看来是时候下单了
+
+另外，我又找了几篇[文章](https://cloud.tencent.com/developer/article/1770529)，研究了一下 u-boot 和 SBI 的关系，SBI 是一个运行在 M 态的 runtime，而 u-boot 是一个运行在 S 态的 BootLoader，一般的 SBI 是集成了 u-boot 的，所以需要做的是下载 u-boot 和 OpenSBI 的代码，然后用 RV32ima 指令集编译，先在本地用 QEMU 测试一下能不能用，能用的话再搬到板子上去
+
+我也参考了几篇讲如何编译 OpenSBI 的文章：[OpenSBI 编译和运行](https://zhuanlan.zhihu.com/p/72340428)，以及 [u-boot 的文档](https://github.com/u-boot/u-boot/blob/master/doc/board/emulation/qemu-riscv.rst)
+
+编译 u-boot 的时候，需要添加以下环境变量：
+
+```shell
+export CROSS_COMPILE=riscv64-linux-gnu-
+export PLATFORM_CPPFLAGS=-march=rv32ima
+```
+
+然后：
+
+```shell
+make qemu-riscv32_smode_defconfig
+make
+```
+
+但是，报错了...亲测编译 RV64 的 u-boot 不会报错，但是 RV32 的就会。报错内容为，`undefined reference to __lshrdi3` 之类的，查了下这些是 `libgcc` 里的函数，但是 Ubuntu 的源里只有 64 位的交叉编译工具链，并没有 32 位的工具链，就很尴尬
+
+看了下，整 RV32 的工具链挺麻烦的，我再给原来电脑装个 ArchLinux 吧，在那上面编译，今天就先到这
+
+现在用上 Ubuntu 了，又想起 ArchLinux 的好了，源里面什么都有，虽然版本都是最新的，可能兼容性上会出一些小问题
+
+### Day 13 进展
+
+* Fuxi SoC 在我将要买的板子上综合、布线、生成 bitstream 成功
+* 板子已下单
+
+### Day 14 计划
+
+1. 给旧电脑装 Manjaro 以及 RV32 工具链
+2. 编译 RV32ima 指令集的 u-boot 和 OpenSBI
+3. 在 QEMU 里调试 GeeOS，进度快的话先做着第二题，写线程调度
 
