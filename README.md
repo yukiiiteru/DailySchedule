@@ -582,3 +582,114 @@ make
 2. 编译 RV32ima 指令集的 u-boot 和 OpenSBI
 3. 在 QEMU 里调试 GeeOS，进度快的话先做着第二题，写线程调度
 
+## Day 14 2021-01-14
+
+事实证明，是我记错了，ArchLinux 的源里面只有 RV32 的 QEMU，并没有 RV32 的 GCC，因此需要手动编译了
+
+但是，我尝试 clone 了一下 `riscv-gcc` 的仓库，发现这个仓库太大了，而我 clone 的速度又巨慢，只能想别的办法了
+
+我找到了这样一个网站：[Cross-compilation toolchains for Linux](https://toolchains.bootlin.com/)，在这里可以下载 Linux 下交叉编译的工具链，试一下 `riscv32-ilp32d` 的工具链吧
+
+```
+riscv32-linux-ld.bfd: libgcc.a(_lshrdi3.o): can't link double-float modules with soft-float modules
+```
+
+我觉得这是 `ilp32d` 的问题，但是我在编译参数里指定 `-mabi=ilp32` 之后也不行，而且看了下 u-boot 的 README，里面有提到 RISC-V 并不会用浮点数寄存器
+
+在 `riscv-gnu-toolchain` 里找到一个 [issue](https://github.com/riscv/riscv-gnu-toolchain/issues/356)，一个哥们用 `rv64ima` 编译 OpenCV 遇到了类似的问题，我觉得这个有一定参考价值，所以开始慢慢 clone 这个仓库吧
+
+然而，由于众所周知的原因，
+
+```
+fatal: 远端意外挂断了
+fatal: 过早的文件结束符（EOF）
+fatal: index-pack 失败
+fatal: 无法克隆 'https://github.com/riscv/riscv-gcc.git' 到子模组路径 'riscv-gnu-toolchain/riscv-gcc'
+第二次尝试克隆 'riscv-gcc' 失败，退出
+```
+
+然后我去 `riscv-gcc` 仓库的 release 部分下载代码，这个真的快多了，但是编译了一个小时后报错：`#include <sys/ustat.h>` 找不到文件，查了一下这个文件已经被取代了，说明我下载的源码版本太旧了...我又看了下时间，2018 年的，确实够旧了，但是新的我 clone 不下来，就很难受
+
+网上搜了一会，找到了 GitHub 的一个镜像：[Gitee 极速下载](https://gitee.com/mirrors)，在这里找到了 `riscv-gcc` 的镜像，虽然 clone 的速度也不是很快，毕竟家里的网速就比学校里慢好多，但是至少没有 GitHub 那么慢了
+
+编译失败，挂在一个 `assert` 上了。看来只能 clone 那个最大的仓库：`riscv-gnu-toolchain` 了。我注意到，这个仓库的 README 里提了一句：
+
+**Warning: git clone takes around 6.65 GB of disk and download size**
+
+就很慌
+
+`git submodule update --init --recursive` 失败了好多次，在网上查的时候偶然发现一个大佬给整理了一个仓库，并写了一个[教程](https://my.oschina.net/yushulx/blog/4649006)，救了我一命
+
+睡前终于编译 u-boot 成功了！还是官方的 `riscv-gnu-toolchain` 好用。编译 toolchain 的方法为：
+
+```sh
+./configure --prefix=/opt/riscv --with-arch=rv32ima --with-abi=ilp32
+make
+```
+
+编译 u-boot 的方法（提前配好 toolchain 的 PATH）：
+
+```sh
+export CROSS_COMPILE=riscv32-unknown-linux-gnu-
+export PLATFORM_CPPFLAGS="-march=rv32ima -mabi=ilp32"
+make qemu-riscv32_smode_defconfig
+make
+```
+
+然后编译 OpenSBI 也是一切顺利：
+
+```sh
+export CROSS_COMPILE=riscv32-unknown-linux-gnu-
+make PLATFORM=generic FW_PLAYLOAD_PATH=(path_to_uboot)/u-boot.bin PLATFORM_RISCV_ISA=rv32ima
+```
+
+最后测试 QEMU 以及 `objdump`，一切顺利：
+
+```sh
+qemu-system-riscv32 -M virt -m 256M -nographic -bios build/platform/generic/firmware/fw_payload.elf
+riscv32-unknown-linux-gnu-objdump -M rv32ima -d build/platform/generic/firmware/fw_payload.elf | less
+```
+
+`objdump` 得到的结果也是很明显可以看出，没有用 RVC 扩展，这下应该可以在 Fuxi SoC 上跑了吧，如果 SoC 不出什么问题的话。毕竟 SoC 只是可以综合可以布线，不代表硬件上没有问题，这个调试起来可就麻烦咯
+
+然而——让 QEMU 启动 OpenSBI 引导 u-boot 来运行 GeeOS 则报了错
+
+```sh
+qemu-system-riscv32 -nographic -machine virt -m 256M -bios fw_payload.elf -kernel build/geeos.elf
+```
+
+错误内容：
+
+```
+rom: requested regions overlap (rom phdr #0: build/geeos.elf. free=0x000000008000a018, addr=0x0000000080000000)
+qemu-system-riscv32: rom check and register reset failed
+```
+
+一个熟悉的错误。把 `-bios fw_payload.elf` 换成 `-bios default` 也会报同样的错误，这可能是 GeeOS 的问题了，看字面意思是 ROM 地址重叠，应该是因为 OpenSBI 和 GeeOS 都是从 0x8000000 启动的吧
+
+翻了下 rCore-Tutorial 得知：
+
+> OpenSBI 所做的一件事情就是把 CPU 从 M Mode 切换到 S Mode，接着跳转到一个固定地址 `0x80200000`，开始执行内核代码。
+
+那么，只需要改一下 `GeeOS/src/linker.ld`，把系统的入口点从 `0x80000000` 改为 `0x80200000` 即可
+
+重新编译了一下，确实不报错了，但是 GeeOS 也没有反应了
+
+大致读了一下代码，发现 GeeOS 是自带 bootloader 的，`src/arch/target` 目录里也对 Fuxi SoC 和 QEMU 做了适配，也就是说原本的 GeeOS 并不需要 OpenSBI，是我画蛇添足了
+
+所以说，我的任务并不是让 SoC 可以用 OpenSBI 引导 GeeOS 启动，而是让 SoC 可以用 OpenSBI 引导其它操作系统，如 xv6 或者 rCore
+
+目标更明确了，那么就开始制定下一步的规划
+
+### Day 14 进展
+
+* 构建 rv32ima-ilp32 的工具链成功
+* 编译 rv32ima 指令集的 u-boot 和 OpenSBI 成功
+
+### Day 15 计划
+
+1. 使用 rv32ima 指令集编译并测试 [xv6-riscv](https://github.com/mit-pdos/xv6-riscv)
+2. 读 OpenSBI 代码，探究可以对 Fuxi CPU 进行的改动（如 stdio 相关）
+3. 上一条进行不顺利，或者没有明确目标的话，就先给 GeeOS 写线程调度，等板子到货
+4. 晚上去牛客打比赛，这边的任务也暂且搁置一下
+
