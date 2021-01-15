@@ -693,3 +693,34 @@ qemu-system-riscv32: rom check and register reset failed
 3. 上一条进行不顺利，或者没有明确目标的话，就先给 GeeOS 写线程调度，等板子到货
 4. 晚上去牛客打比赛，这边的任务也暂且搁置一下
 
+## Day 15 2021-01-15
+
+突然发现 xv6-riscv 是 RV64 的，要移植到 Fuxi SoC 的话还需要改成 RV32 才能运行，而且 xv6-riscv 也是不需要 bios，也就是 SBI 和 u-boot 的，那我编译了个寂寞...
+
+此外，我在读 xv6-riscv 的 `Makefile` 过程中发现了，用 QEMU 运行的时候添加了一个参数 `-bios none`，我又重新编译了一下 QEMU-5.2.0，发现最新版本的 `qemu-system-riscv` 默认就是用 OpenSBI 启动的，所以之前才会出现那样的错误，在 GeeOS 的 `Makefile` 里也加上这个参数就可以在最新版本的 QEMU 里运行了
+
+在 GitHub 闲逛，找到了 [michaelengel / xv6-rv32](https://github.com/michaelengel/xv6-rv32)，亲测可用。就决定是你了！
+
+读了下 `GeeOS/src/arch/target/` 里面的几个文件，发现 Fuxi SoC 和 QEMU 之间的区别挺大的呀，QEMU 的 UART 可以直接用数组索引，但是 Fuxi SoC 只能用地址访问。而且在 Fuxi SoC 里，UART 的地址明明是 `0x11040000`，可 UART 的管脚都是从 `0x11041000` 开始偏移的，而且应该是占 1 字节的管脚变成了占 4 字节的，想改这个但是不知道从哪下手
+
+我觉得，如果要把 GeeOS 改成在 Fuxi SoC 里面运行的状态，应该修改 `src/arch/arch.yu`，修改 30 行的 `import` 语句即可。此外，`src/arch/target/fuxi.yu` 的 UART 时钟频率应该也要改
+
+又搜索了一下，外设的物理地址是在 `Fuxi/soc/soc.srcs/sources_1/bd/soc/soc.bd` 这个文件里分配的，折腾了一下发现可以在 Vivado 的 Address Editor 界面编辑，就不动这个了吧
+
+至于 UART 输出字节的问题，对比了一下 NonTrivialMIPS，并没有发现 UART 部分有什么区别。读了一下 OpenSBI 的代码，发现 UART 可以设置 `reg_width`，也就是说 QEMU 使用 UART 的 `reg_width=1`，而 Fuxi SoC 使用 UART 的 `reg_width=4`，所以说这是 UART 的区别咯
+
+此外，我发现 OpenSBI 只能针对特定芯片编译，因为外设的地址不同。比如之前编译的就设置了 `PLATFORM=generic`，这代表编译到 QEMU 上使用。所以要想移植到 Fuxi SoC 上，还需要为 OpenSBI 在 `platform` 目录下写针对 Fuxi SoC 的配置才可以
+
+### Day 15 进展
+
+* 编译并运行 `xv6-rv32` 成功
+
+### Day 16 计划
+
+1. 上午 fork 一份 OpenSBI，编写针对 Fuxi SoC 平台的代码并尝试编译
+2. 下午板子应该能到货，收到之后把我移植的 SoC 烧进去测试，debug
+
+说起来，我买的 VGA 线还没到，先用串口跟 [Fuxi-Soft](https://github.com/MaxXSoft/Fuxi-Soft) 里面的小软件调试吧
+
+这两项可能都需要好几天来完成，加油！
+
