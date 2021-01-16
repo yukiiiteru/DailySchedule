@@ -640,7 +640,7 @@ make
 
 ```sh
 export CROSS_COMPILE=riscv32-unknown-linux-gnu-
-make PLATFORM=generic FW_PLAYLOAD_PATH=(path_to_uboot)/u-boot.bin PLATFORM_RISCV_ISA=rv32ima
+make PLATFORM=generic FW_PAYLOAD_PATH=(path_to_uboot)/u-boot.bin PLATFORM_RISCV_ISA=rv32ima
 ```
 
 最后测试 QEMU 以及 `objdump`，一切顺利：
@@ -723,4 +723,32 @@ qemu-system-riscv32: rom check and register reset failed
 说起来，我买的 VGA 线还没到，先用串口跟 [Fuxi-Soft](https://github.com/MaxXSoft/Fuxi-Soft) 里面的小软件调试吧
 
 这两项可能都需要好几天来完成，加油！
+
+## Day 16 2021-01-16
+
+OpenSBI 的配置好像也不难嘛，复制一份模板，改一下就好了。不过配置里面的 `HART_COUNT` 有点难理解，查了一下才明白 RISC-V 里面把 CPU 的 Core 称为 HART，参考文献：[RISC-V64 opensbi启动过程](https://my.oschina.net/u/4239621/blog/4779185)
+
+不过 u-boot 的配置比较麻烦，配好一份 `defconfig` 文件后，编译也出了不少问题，查不到解决方案，那就编译 OpenSBI 的时候不要 `FW_PAYLOAD` 就好了
+
+板子收到货了，然而我用 Vivado 来 Generate BD 的时候又报错...然后不知道怎么回事，瞎点了几下又莫名其妙好了，重新 commit, push, rm, clone，还是同样的错误，再乱点几下又好了，Vivado 真神奇啊
+
+然而，布线又双叒叕报错，`DRC INBB-3`，查了下网上报这个错都是因为换电脑、移动文件夹、更换 Vivado 版本之类的原因造成的，应该问题不大
+
+["\[DRC INBB-3\] Black Box Instances." Unable to instantiate user created IP's](https://forums.xilinx.com/t5/Design-Entry/quot-DRC-INBB-3-Black-Box-Instances-quot-Unable-to-instantiate/td-p/801905)
+
+折腾了一下午，终于找到解决方案了：把出问题的 IPC 删掉再重新加上，一切正常
+
+到了晚上终于把 Fuxi SoC 给烧到 FPGA 里了，但是又折腾了一晚上，还是不知道该怎么把 ELF 文件烧到 Flash 里面，只能呆呆地看着 Vivado 里面 ILA 传来的波形
+
+顺便吐槽一下，运行起来的 FPGA 芯片真的好烫
+
+### Day 16 进展
+
+* 针对 Fuxi SoC 编译 rv32ima 指令集的 OpenSBI 成功，虽然并没有测试
+* 板子到货，成功把 Fuxi SoC 烧进 FPGA，虽然并没有测试
+
+### Day 17 计划
+
+1. 研究如何把 ELF 烧到 Flash 里
+2. 调试 GeeOS 和 OpenSBI
 
