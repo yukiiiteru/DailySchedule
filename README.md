@@ -463,7 +463,7 @@ MII 可以没有，不上网也没关系；SD 卡可以没有，不读 SD 卡也
 
 HDMI 还是 VGA，这还是个问题。不过，现在选输出接口是不是有点太早了，毕竟没有 BIOS，也没法往屏幕上画黑框框写字
 
-等等，突然想起 xqz 大佬的毕设，用 YuLang 写了个[幻灯片播放器](https://github.com/MaxXSoft/Fuxi-Soft/tree/master/src/slideshow)，应该是用的 DMA 方式(?)，直接往内存里写，就可以让显示器实时显示。在 YuLang 里还有 `lib.soc` 的标准库，直接往 `VGA_ADDR ` 这一地址 `writeWord`，简直是太妙了
+等等，突然想起 MaxXing 大佬的毕设，用 YuLang 写了个[幻灯片播放器](https://github.com/MaxXSoft/Fuxi-Soft/tree/master/src/slideshow)，应该是用的 DMA 方式(?)，直接往内存里写，就可以让显示器实时显示。在 YuLang 里还有 `lib.soc` 的标准库，直接往 `VGA_ADDR ` 这一地址 `writeWord`，简直是太妙了
 
 所以，我选择 VGA
 
@@ -751,4 +751,34 @@ OpenSBI 的配置好像也不难嘛，复制一份模板，改一下就好了。
 
 1. 研究如何把 ELF 烧到 Flash 里
 2. 调试 GeeOS 和 OpenSBI
+
+## Day 17 2021-01-17
+
+查了一上午资料，还是不知道该如何把 ELF 烧到 Flash 里...因为查到的资料都太旧了，都是用的 Xilinx SDK，而我用的是 Vivado 2020.2，Xilinx SDK 已经被 Vitis 取代了，而里面我又找不到跟 SDK 对应的菜单
+
+参考导师 MaxXing 给我提的建议，可以使用串口调试 GeeOS，但是我用串口把 `geeos.elf` 用 `utils/uart.py` 写进去之后没有任何事情发生，说明 SoC 还是有问题的，但是问题不知道出在哪，也不知道怎么调试...
+
+找到了 [Vitis HDL 的文档](https://www.xilinx.com/html_docs/xilinx2020_1/vitis_doc/index.html)，但是似乎并没有什么用
+
+20210117 傍晚补充：犯了个低级错误...把 ELF 烧到 Flash 里需要用的是 Vitis，但我装 Vivado 的时候默认装的是 Vitis HLS，Vitis 跟 Vitis HLS 似乎不是同一个东西...就很尴尬
+
+再挂机一晚上装 Vitis 吧，下载的时候读一下 GeeOS 的代码，准备写线程调度
+
+20210117 晚上补充：挂机下载 Vitis，去休息了会，回来发现下载速度变慢了，重开安装器之后提示硬盘空间不足，因为我只给 Linux 分配了 200G 的空间，Vitis 需要 140G，可用的空间只有 130G 了。但是问题是，有一部分被占用的空间里面存着已经下好的 Vitis 安装文件和已经装好、不用再安装的 Vivado 啊，为什么要忽略这些
+
+被迫切回 Windows，用迅雷下载 Vitis 吧，倒是也不影响读 GeeOS 的代码，只是不能编译调试了，毕竟 Windows 下配环境太麻烦了
+
+### Day 17 进展
+
+今天就查资料、折腾 Vivado、折腾 Vitis HDL，基本没有进展。非要说的话，进展如下：
+
+* 用串口下载测试得知，现在的 Fuxi SoC 在我的板子上并不能正常运行 GeeOS，还需要再修改
+* 查了一整天资料，最后才知道把 ELF 烧到 Flash 里还需要 Vitis，需要下载安装
+
+此外，我发现板子掉电重启之后，烧进去的 Fuxi SoC 又变回出厂时的按键控制 LED 的程序了。参考 NonTrivialMIPS，上面说 `*.bit` 文件也要写到 Flash 里面。等我切回 Windows 读一下板子配套的文档再研究研究吧
+
+### Day 18 计划
+
+1. 安装 Vitis，把 Fuxi SoC 和准备好的 ELF 烧到 Flash 里
+2. 调试 Fuxi-Soft, GeeOS 和 OpenSBI
 
