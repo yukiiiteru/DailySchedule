@@ -782,3 +782,27 @@ OpenSBI 的配置好像也不难嘛，复制一份模板，改一下就好了。
 1. 安装 Vitis，把 Fuxi SoC 和准备好的 ELF 烧到 Flash 里
 2. 调试 Fuxi-Soft, GeeOS 和 OpenSBI
 
+## Day 18 2021-01-18
+
+下载几乎用了一整天时间，为此还氪了一个月的迅雷会员。此外刚好今天也比较忙，就没怎么做...
+
+在 Linux 下装好 Vitis 之后，点击菜单里面的 `Xilinx > Program Device`，没有反应，我以为是 Linux 的 bug，又在 Windows 下重新安装了一遍，结果是一样的...
+
+按网上的教程，应该先用 Vivado 导出的 `.xsa` 文件新建一个 Platform Project，然后点击菜单里的 `Xilinx > Create Boot Image` 用 `.bit` 文件和需要烧写的 `.elf` 文件制作 `.bin` 文件，再点击菜单 `Xilinx > Program Device` 把 `.bin` 文件烧写进去
+
+但是问题来了，新建 Platform Project 失败，`Create Boot Image` 只能制作 Zynq 的 Boot Image，就很尴尬
+
+网上的教程都是 MicroBlaze 或者 Zynq 的，要不有时间参考教程整一个 MicroBlaze 的试试
+
+20210118 深夜补充：不管了，先把这个 push 上去，MicroBlaze 我尽量今晚整完
+
+### Day 18 进展
+
+* 碰了不少壁，只装好了 Vitis，但是并不知道如何把 `.bit` 文件和 ELF 文件烧到板子里
+* 今晚肝一下，应该能把 MicroBlaze 烧到板子上
+
+### Day 19 计划
+
+1. 继续折腾 Vitis
+2. 继续找把 `.bit` + `.elf` 烧到板子上的方法
+
