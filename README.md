@@ -796,13 +796,23 @@ OpenSBI 的配置好像也不难嘛，复制一份模板，改一下就好了。
 
 20210118 深夜补充：不管了，先把这个 push 上去，MicroBlaze 我尽量今晚整完
 
+20210119 凌晨补充：用 MicroBlaze 的 `.xsa` 文件创建 Platform Project 的时候，可以选 Operating System 和 Processor，而用 Fuxi SoC 的 `.xsa` 文件创建 Project 的话什么都不能选，强行 Finish 的话就会报错。但是我真的没用你家的 Processor 啊
+
+用 MicroBlaze 的 `.xsa` 在 Vitis 里一切正常，跟教程基本一模一样，除了最后的程序烧进去并不能输出 Hello, World
+
+此外我发现配好 Processor 之后，再选择 Program Device 菜单的时候，一切正常，该点的都能点
+
 ### Day 18 进展
 
-* 碰了不少壁，只装好了 Vitis，但是并不知道如何把 `.bit` 文件和 ELF 文件烧到板子里
-* 今晚肝一下，应该能把 MicroBlaze 烧到板子上
+* 把 MicroBlaze 烧到板子上了，虽然并不能跟教程所说输出 Hello, World。折腾得太着急，不知道哪里出了问题
+* 了解 Vitis 的基本操作了
 
 ### Day 19 计划
 
 1. 继续折腾 Vitis
 2. 继续找把 `.bit` + `.elf` 烧到板子上的方法
+
+不过我想了一下，感觉每次都把 `.bit` 和 `.elf` 文件烧进去也不是办法，如果 ELF 文件不大的话，还是用串口调试比较方便
+
+要不先折腾串口？
 
