@@ -816,3 +816,38 @@ OpenSBI 的配置好像也不难嘛，复制一份模板，改一下就好了。
 
 要不先折腾串口？
 
+## Day 19 2021-01-19
+
+今天又好忙，事情好多
+
+经过了一顿折腾，我感觉 Vitis 似乎就是拿来搞 MicroBlaze 和 ZYNQ 的，而不是给自己写的软核用的
+
+对于写 Flash 还是没有思路，于是我掏出了板子给的 demo，拿出了流水灯的 Project 来学习 Vivado 的使用
+
+用 Vivado 里的 Program Device 就可以把电路代码临时写到 FPGA 里，掉电之后就会重置。想写到 Flash 里并运行的话，需要用 `.bin` 或者 `.mcs` 文件。我又试着用 `Tools > Generate Memory Configuration File` 来生成 `.mcs` 文件，然后用 `Program Configuration Memory Device` 来把 `.mcs` 文件烧到 Flash 里面。可能是由于生成 `.mcs` 文件时设置的 Start Address 的问题，我的板子成功地变成了一块砖（而且还是带刺儿的砖x）
+
+唯一一件值得庆幸的事情是，FPGA 芯片终于不烫手了 hhh
+
+虽说可以在 Vivado 里选择让板子 `Boot from Configuration Memory Device`，而且流水灯可以运行起来，但是我想要的是上电后自启动，而不是手动启动，这个还不知道怎么实现
+
+可以按道理，bitstream 就应该写到 `0x00000000` 的吧
+
+20210119 晚上补充：受到一篇文章 [FPGA基础入门【7】开发板的启动配置方式](https://blog.csdn.net/qimoDIY/article/details/86768015) 的启发，我拔掉了 JATG 线，然后给板子上电，流水灯启动起来了。原来是板子启动顺序的问题
+
+20210119 晚上又补充：找到了把 ELF 文件写到 `.mcs` 里面的方法...之前我以为是乱七八糟的文件不让写，刚才算了一下才知道，一共才 16M 的 Flash，我给设的偏移是 `0x80000000`(2G)，这肯定写不进去啊喂
+
+那么问题来了，到底要把偏移的值设成多少呢
+
+题外话：明天 ICPC 的队友组织了一场模拟赛，今天就该准备好板子练练手了，刷了几道题，学了一下 Java 的 BigInteger，感觉不错，虽然满脑子都是 SoC（
+
+### Day 19 进展
+
+* 发现 Vitis 并不适合我
+* 届到了烧 `.bit` 和 `.elf` 文件的方法
+* 学习了 Java 里 BigInteger 的使用
+
+### Day 20 计划
+
+1. 找 ELF 文件应该烧到 Flash 里的偏移值
+2. 打模拟赛，刷题
+
