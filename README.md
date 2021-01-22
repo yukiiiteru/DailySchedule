@@ -5,6 +5,7 @@
 * (Day 4) YuLang 编译成功，可以正常使用
 * (Day 4) GeeOS 编译成功
 * (Day 5) GeeOS 在 QEMU 中运行成功
+* (Day 22) Fuxi SoC 在 Vivado 中仿真成功
 
 ## Before 2021
 
@@ -935,4 +936,41 @@ OpenSBI 的配置好像也不难嘛，复制一份模板，改一下就好了。
 
 1. 调整 Fuxi SoC 结构，继续仿真，目标是让 CPU 能从指定地址读到指令
 2. 仿真正常工作后烧到板子上，让板子能输出 `booting from 0x200...`
+
+## Day 22 2021-01-22
+
+今天吃完饭后打开电脑，发现了 MaxXing 对仿真方面的指点。原来仿真进行不下去是因为 `SoC_tb.v` 没有对外连接 DDR3，所以 MIG 的 complete 信号始终是 0，也就是初始化未完成，导致 Processor System Reset 对外的 `mb_reset` 信号一直是 1，也就是重置。根据指点，把 complete 的连线断开，让 `aux_reset_in` 信号悬空，SoC 就可以正常运行了
+
+当然，这个过程中我也犯了一些低级错误，比如刚把这条连线断开之后，我发现进行到 1s 的时候，连入 CPU 的 `rst` 信号还是 1，我以为是这个方法没有用，于是在 Processor System Reset 上面用 `const_high` 和 `const_low` 接来接去，也一直没有解决问题，直到我学会了抓指定 IP Core 的波形，并且看到了一篇文章：[PG164-Processor System Reset Module v5.0 IP核学习](https://www.cnblogs.com/Ariza123/p/FPGA.html)，才发现问题所在
+
+Processor System Reset 根据输入信号对外输出复位信号，而输出的复位信号是有一个时序关系的。总的来说，是先让 Interconnect 复位，再让 Peripheral 复位，最后再让 CPU 复位。我也发现，在进行到 1s 的时候已经开始让 Interconnect 和 Peripheral 结束复位了，按道理对 CPU 的复位信号会在几个时钟周期后取消。我点了一下 Run All，CPU 果然正常运行起来了。我这才知道，原来修改后 CPU 的 `rst` 信号一直是 1，是因为我没有让仿真继续向后进行...
+
+总的来说，就四个字：仿真成功
+
+至于在板子上跑，还要调整一些参数，比如 `GeeOS/src/arch/target/fuxi.yu` 里面 UART 的时钟频率，之前跑不起来可能是因为这个，现在才突然意识到
+
+修改之后还是跑不起来，用 ILA 抓板子上的波形只能抓到 1024 个时钟周期(?)，查了一下找到了 [Vivado中ILA的使用](https://forums.xilinx.com/t5/%E5%B5%8C%E5%85%A5%E5%BC%8F-%E5%B7%A5%E5%85%B7-%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/Vivado%E4%B8%ADILA%E7%9A%84%E4%BD%BF%E7%94%A8/m-p/1140050)，上面写可以修改 ILA 的采样深度，虽然改完还是一片 0，而且得不到其他地方的波形，就很懵，只能继续往 ILA 上连线了，先把 `mb_reset` 连上试试看
+
+果然，`mb_reset` 一直是 1。感觉这样太麻烦了，我直接新建了一个 ILA，把想看的信号都连到上面了，毕竟综合布线啥的也不快，这样还能节省不少时间，虽然 Vivado 在跑的时候我一直在刷编译原理（顺便追番），也没有浪费很多时间就是了
+
+重新添加一个 ILA 之后抓波形，发现得到的是一条平的直线，就很迷。我以为是时钟的问题，调整一下，结果也没用
+
+ILA 调试失败，换一种方法：改 bootloader。我注意到，`Fuxi/soc/README.md` 里和 Vivado 的 Address Editor 里有写 UART 的地址为 `0x11040000`，而在 `GeeOS/src/arch/target/fuxi.yu` 里写实际使用 UART 的地址为 `0x11041000`，这里有 `0x1000` 的偏差。我魔改了一下 GeeOS 的 bootloader，分别初始化两个地址的 UART，然后向两个地址的 UART 死循环输出不同内容，结果串口还是收不到任何内容 orz
+
+现在的问题是：UART 得不到任何输出，不知道是 Fuxi SoC 不能正常工作还是 UART 的配置有问题，要不再换 AXI Uartlite 试试
+
+亲测不可用...而且也得到了 MaxXing 的答复：[AXI UART 16550 v2.0](https://www.xilinx.com/support/documentation/ip_documentation/axi_uart16550/v2_0/pg143-axi-uart16550.pdf) 文档里有写，这 `0x1000` 的偏差来自 Xilinx 的人为规定，所以既然用了 AXI UART16550，就应该遵守这边的规矩
+
+那么问题出在哪呢？是我用的软件问题吗？要不抛弃 PuTTY 换其他软件？自己用 Python 写一个？
+
+或者说，有没有方法能够把 SoC 烧到板子上之后还能抓全部的波形？
+
+### Day 22 进展
+
+* 仿真成功，但烧到板子上之后仍旧不能从 UART 输出
+
+### Day 23 计划
+
+1. 继续排查原因
+2. 逐个解决，直到板子可以从 UART 输出文本
 
