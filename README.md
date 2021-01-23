@@ -6,6 +6,7 @@
 * (Day 4) GeeOS 编译成功
 * (Day 5) GeeOS 在 QEMU 中运行成功
 * (Day 22) Fuxi SoC 在 Vivado 中仿真成功
+* (Day 23) 阉割版 Fuxi SoC 在 FPGA 中启动成功
 
 ## Before 2021
 
@@ -973,4 +974,52 @@ ILA 调试失败，换一种方法：改 bootloader。我注意到，`Fuxi/soc/R
 
 1. 继续排查原因
 2. 逐个解决，直到板子可以从 UART 输出文本
+
+## Day 23 2021-01-23
+
+今天从 BootLoader 开始排查。首先，Fuxi 里内置的 BootLoader 跟 GeeOS 中编译出的差别比较大，我就在想是不是优化的问题，果然把 `toolchain.mk` 里的 `DEBUG` 参数设为 0 之后就开启了 `-O2` 优化，这样子得到的结果就一样了
+
+为了适配我的板子，我也顺便改了一下 UART 的时钟周期，因为在龙芯板子上的 UART 时钟周期是 100MHz，而在我板子上 UART 的时钟周期是 200MHz，这里还是有点差别的。另外还要注释掉 `entry()` 里面开启 LED 的代码，因为外设都被我删掉了，总线不知道这部分地址该交给谁处理，可能也会卡在这
+
+改完 BootLoader 烧进板子，UART 仍旧没有输出，BootLoader 不知道有没有问题
+
+我打开了板子送的 demo，把 UART\_test 烧到板子里，PuTTY 能收到来自 UART 的消息，PuTTY 没问题
+
+接下来检查 SoC 的配置，首先 UART 的管脚配置没问题，时钟不知道怎么检查，把差分时钟改成 single-end 的那种，结果也不行，感觉应该不是时钟的问题
+
+然后我突发奇想，会不会是 MIG 的问题，于是把 DDR3 的 complete 信号线从 Processor System Reset 上断开，再到板子上运行，这次成功了！
+
+从 UART 输出了
+
+```
+GeeOS bootloader v0.0.1
+                       boot mode: UART
+                                      waiting for u32 sequence: 0x9e9e9e9e OFFSET LEN DATA...
+```
+
+还真就是 MIG 的问题哦，那么 MIG 到底出了什么问题呢，不初始化可不行，我再调整一下
+
+此外，PuTTY 有一些小问题：终端下 `\n` 应该等效于 `\r\n` 的，即让光标先回到行首再换到下一行，但是在 PuTTY 中只换到下一行了，并没有让光标到行首，导致输出有点乱
+
+这次能查出问题所在，里面还是有一些运气的成分。虽然我之前已经从 ILA 中观察到 DDR3 传来的 complete 信号是 0 了，但是我也注意到向 ILA 中传入的时钟信号也一直是 0，还以为是 ILA 出问题了，结果事实证明并没有，把 complete 信号断开后 ILA 一切正常
+
+把 MIG 改成默认设置后，还是熟悉的错误：`[DRC PDRC-34]` 和 `[DRC PDRC-43]`，是 MMCM 和 PLL 的问题，需要把 Clocking Wizard 和 MIG 的时钟频率调整到合适的值才可以解决
+
+现在外设的时钟频率是 200 MHz，如果再把 Clocking Wizard 的频率调高的话，外设的时钟频率会变成 400MHz，而 UART 可以正常工作的时钟频率范围是 25MHz~300MHz，超出范围会报错，只能改 MIG 那边了
+
+在板子给的 demo 里找到了读写 DDR3 的一个工程，参考了一下里面的配置，改得已经跟 demo 基本没有区别了，但是 demo 就是可以运行，而我的不可以
+
+现在我的 DDR3 配置跟 demo 的 DDR3 配置只有开不开 AXI 的区别了，会是这里出的问题吗？
+
+此外，Address Editor 里的内存范围我也没有改，我的板子是 1G 的内存，而龙芯的板子是 128M 的内存，这里有影响吗？
+
+### Day 23 进展
+
+* 排除了各种因素，最后把不能正常运行的原因锁定到了 MIG 上
+* 成功把断开 MIG 的 complete 信号的 Fuxi SoC 启动起来并输出 BootLoader 信息了
+
+### Day 24 计划
+
+1. 查资料查文档，用 MicroBlaze 调试 MIG (?)
+2. 让 Fuxi SoC with DDR3 在我的板子上正常工作
 
