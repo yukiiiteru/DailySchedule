@@ -6,7 +6,7 @@
 * (Day 4) GeeOS 编译成功
 * (Day 5) GeeOS 在 QEMU 中运行成功
 * (Day 22) Fuxi SoC 在 Vivado 中仿真成功
-* (Day 23) 阉割版 Fuxi SoC 在 FPGA 中启动成功
+* (Day 23) Fuxi SoC without DDR3 在 FPGA 中启动成功
 
 ## Before 2021
 
@@ -1021,5 +1021,51 @@ GeeOS bootloader v0.0.1
 ### Day 24 计划
 
 1. 查资料查文档，用 MicroBlaze 调试 MIG (?)
+2. 让 Fuxi SoC with DDR3 在我的板子上正常工作
+
+## Day 24 2021-01-24
+
+今天别的不干，就折腾 MIG 了
+
+找到了 [MIG 的文档](https://www.xilinx.com/support/documentation/ip_documentation/mig_7series/v1_4/ug586_7Series_MIS.pdf)，了解了 MIG 初始化的步骤 (47页)。如果能知道 MIG 的初始化卡在哪一步就好了
+
+另外，我也找到了一篇[仿真 MIG 的文章](https://blog.csdn.net/meng19901003/article/details/107562666)，但是感觉参考价值不大
+
+[\[问答\] 新人求助，xilinx中K7系列mig使用不了](https://bbs.elecfans.com/jishu_1574631_1_1.html) 里提到，电路原理设计没有问题的情况下，MIG 初始化失败主要有两种情况：1. 电源；2. 时钟
+
+[VIVADO调用MIG产生DDR3时实例化遇到的问题以及解决方法](https://www.it610.com/article/1297846227508994048.htm) 里提到，如果 Input Clock Period 存在问题的话，应该在综合的时候就会报错
+
+又找到了 MIG 的 Debug Guide：[MIG 7 Series DDR3/DDR2 - Hardware Debug Guide](https://www.xilinx.com/Attachment/Xilinx_Answer_43879_debug.pdf), [MIG Ultra Scale DDR4/DDR3 - Hardware Debug Guide](https://www.xilinx.com/Attachment/Xilinx_Answer_60305_2014_3.pdf)，显然就是在推销 ChipScope 软件的(x)，但是我心动了，找了半天就看到在 ISE 专业版里会内置，Vivado 相关的地方并没有找到，然而 ChipScope 有写支持 Artix-7 系 FPGA 啊，为什么不能随 Vivado 附送呢
+
+找到了 ChipScope 的文档：[ChipScope Pro Software and Cores User Guide](https://www.xilinx.com/support/documentation/sw_manuals/xilinx14_7/chipscope_pro_sw_cores_ug029.pdf)，跟刚才的 Debug Guide 一样都是 2012 年的，我觉得没什么参考价值了，还是不找了吧
+
+还找到了最近的文档：[UltraScale Architecture-Based FPGAs Memory IP v1.4](https://www.xilinx.com/support/documentation/ip_documentation/ultrascale_memory_ip/v1_4/pg150-ultrascale-memory-ip.pdf)，前天刚更新的，很有参考价值了。这个文档 589 页有讲 Debug Tools：
+
+> Memory IP includes XSDB debug support. The Memory IP stores useful core configuration, calibration, and data window information within internal block RAM. The Memory IP debug XSDB interface can be used at any point to read out this information and get valuable statistics and feedback from the Memory IP. The information can be viewed through a Memory IP Debug GUI or through available Memory IP Debug Tcl commands.
+
+还有还有：[Vivado Design Suite User Guide Programming and Debugging](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2020_2/ug908-vivado-programming-debugging.pdf)
+
+还找到一个视频：[How to Design a Memory Interface and Controlled with Vivado MIG for the UltraScale Architecture](https://www.xilinx.com/video/hardware/design-memory-interface-controlled-vivado-mig-ultrascale-architecture.html)，我发现 MIG 5.0 版本可以在生成 Memory Interface 的时候选择是否启用 Debug Signals，而现在的 MIG 7.0 似乎没有这一选项了
+
+参考了以上视频的方法，不从 BD 里面创建 MIG，而是从 IP Catalog 里选择创建 MIG，结果从这里创建的可以选择开启关闭 AXI 选项，也可以选择开启关闭 Debug Signals for Memory Controller，这还搞歧视还是咋地（摊手
+
+那还能怎么给 MIG 调试嘛
+
+又逛了下 Xilinx 的论坛，有人发现过这个问题：[Debug Signals for Memory Controller option missing](https://forums.xilinx.com/t5/Memory-Interfaces-and-NoC/Debug-Signals-for-Memory-Controller-option-missing/m-p/1027579)，这哥们问为什么我用 MIG 创建 Memory Controller 的时候找不到 Debug Signals 了，下面的回答说，确认一下你是不是从 IP Catalog 打开的 MIG。道理我都懂，但是我想在 BD 里面用 Debug Signals 啊...
+
+结果真的折腾 MIG 了一整天 hhh
+
+睡前顺便吐槽一句，Vivado 真的好吃内存，我 8G 的内存经常被占满然后 Vivado 闪退，在考虑要不要加一根内存条
+
+### Day 24 进展
+
+* 收获了一大堆文档
+* 收获了很多失败的经验
+
+### Day 25 计划
+
+今天好像忘记整 MicroBlaze 了...
+
+1. 用 MicroBlaze 调试 MIG
 2. 让 Fuxi SoC with DDR3 在我的板子上正常工作
 
