@@ -1069,3 +1069,51 @@ GeeOS bootloader v0.0.1
 1. 用 MicroBlaze 调试 MIG
 2. 让 Fuxi SoC with DDR3 在我的板子上正常工作
 
+## Day 25 2021-01-25
+
+给 MicroBlaze 加 ILA，一次成功，难道是给 DDR3 的输入出了问题？
+
+经过排查，似乎是 ResetSynchronizer 的锅...读了下 ResetSynchronizer 的代码，这个模块本质是一个 Buffer，会把收到的 reset 信号延迟 `RESET_STAGE` 个时钟周期发送给 DDR3 模块，然而这个模块的输入也一直是 0，好像就这样形成了一个死循环(?)
+
+输入给 ResetSynchronizer 的 reset 信号是 0，代表 reset，ResetSynchronizer 又让 DDR3 给 reset，DDR3 则一直不会 complete，而 complete 信号又会发给 Processor System Reset，导致输出的 reset 信号也一直是 0 (?)，似乎是这样，我再仿真一下试试看
+
+把 MicroBlaze 的 complete 与 `aux_reset_in` 连起来，依旧能初始化成功，但是我注意到 DDR3 的 `sys_rst` 是跟外部的 `reset_n` 直连的，而 Fuxi SoC 的 DDR3 的 `sys_rst` 是连接 Clocking Wizard 的 `locked` 信号的，而且我看了一下 NonTrivialMIPS 也是同样的结构，为什么我这边就会出问题呢
+
+在 MicroBlaze 的例程中直接让 DDR3 起到了 Clocking Wizard 的作用，所以初始化总能成功(?)
+
+我觉得应该读一下 Clocking Wizard 和 Processor System Reset 的文档了，理解一下 `locked` 和 `peripheral_reset` 的输出才可以继续折腾下去
+
+Clocking Wizard 的 `locked` 代表输出的时钟是可用的，而 `locked` 与 DDR3 的 `sys_reset` 直连，应该就可以初始化了吧
+
+继续收集资料：[DDR3学习之一 好用的学习资料](https://blog.csdn.net/weiweiliulu/article/details/90900011)
+
+又模仿 Fuxi SoC 的线路结构重新整了一个 MicroBlaze，结果检测不到 ILA 核，可能是时钟有问题。于是机智的我把想检测的信号接到 LED 上，不也挺好(x)，但是结果并没有亮...
+
+把 Fuxi SoC 断开了 complete 与 `aux_reset_in` 的连线，然后烧到板子上用 ILA 检测 complete 信号，结果一直是 0，说明之前的构想是错误的，就是由于配置问题没有初始化完成，那是怎么回事呢
+
+要不魔改一下 Fuxi SoC，把 Clocking Wizard 删掉，都用 DDR3 的时钟试试，就模仿 MicroBlaze 例程里的用法
+
+不行，魔改之后检测不到 ILA 核...而且似乎也不行...
+
+突然想起来，我这板子有两个晶振，一个 200MHz 一个 125MHz，换成 125 的不知道会不会还报之前的错误
+
+查到了一个帖子：[What frequency should be used on MIG IP core?](https://forums.xilinx.com/t5/Memory-Interfaces-and-NoC/What-frequency-should-be-used-on-MIG-IP-core/td-p/558770)，里面提到：
+
+> Clock Period - that you see in MIG GUI controller options page is the frequency at which memory runs, it should be selected based on your design requirement.
+> 
+> System clock = Input clock =  on board oscillator clock which derives memory clock and all other clocks like freq ref clock, sync pulse required for IP functionality. More details can be seen in UG586 clocking architecture section
+> 
+> Reference clock is the IOdelay controller clock that sets tap values during calibration
+
+这里提到 System clock = Input clock，道理我都懂，但是我把 `clk_ddr` 改得跟 Input Clock Period 一样的话，能不能运行还另说，综合的时候就会报错啊!!!
+
+qwq 先睡了，明天继续
+
+### Day 25 进展
+
+* 收获了很多失败的经验
+
+### Day 26 计划
+
+1. 让 Fuxi SoC with DDR3 在我的板子上正常工作
+
