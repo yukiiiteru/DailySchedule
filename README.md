@@ -1140,3 +1140,35 @@ qwq 先睡了，明天继续
 1. 在 Vivado 里调试 DDR3，直到可以正常运行
 2. 让 Fuxi SoC with DDR3 在我的板子上正常工作
 
+## Day 27 2021-01-27
+
+继续研究 `init_calib_complete` 信号拉不上去的问题
+
+找到一篇帖子：[MIG simulation: init\_calib\_complete stays low](https://forums.xilinx.com/t5/Memory-Interfaces-and-NoC/MIG-simulation-init-calib-complete-stays-low/td-p/723761)
+
+这里面提到了四个帖子：
+
+第一个是加速仿真的，暂时没有参考价值；
+
+第二个没有问题，只是提出了自己的一些疑问；
+
+第三个是 complete 信号拉不上去的，根据回答可以看出是犯了低级错误，`reset` 信号没连上；
+
+第四个是 complete 信号拉不上去的，根据回答可以看出也是犯了低级错误，仿真要进行到 50~85 us 才能看到 complete 信号上去，作者第一次只进行到 30+ us，我参考这个仿真到 200 us，complete 信号没有上去，看来不是这个问题；
+
+拿原版 Fuxi SoC 试了下，在 Vivado 2020.2 下跟我修改过的 SoC 是同样的结果，我怀疑是 Vivado 版本的问题，换成 2018.3 也是同样的结果，又突然陷入僵局
+
+我在想是不是还要给 DDR3 发送一个初始化信号，DDR3 才会初始化。先写一个空的 DDR3 套一个 top，让管脚悬空只接 `clk` 和 `rst` 试试看，如果不行的话在套上 example 里发送 AXI 信号的模块试试
+
+实践证明，就算没有 AXI 线给 DDR3 发信号，也可以正常初始化完毕。那么初始化失败就是配置的问题了
+
+### Day 27 进展
+
+* 研究得出，DDR3 的初始化跟 AXI 信号没有关系
+* 经过删减 example 得到了最小化的 DDR3 调试代码
+
+### Day 28 计划
+
+1. 使用 DDR3 调试代码探究时钟跟 DDR3 能否正常工作之间的关系
+2. 修改 Fuxi SoC 的时钟及 DDR3 配置，使其可以正常仿真
+
