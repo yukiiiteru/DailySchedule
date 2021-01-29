@@ -5,8 +5,9 @@
 * (Day 4) YuLang 编译成功，可以正常使用
 * (Day 4) GeeOS 编译成功
 * (Day 5) GeeOS 在 QEMU 中运行成功
-* (Day 22) Fuxi SoC 在 Vivado 中仿真成功
+* (Day 22) Fuxi SoC without DDR3 在 Vivado 中仿真成功
 * (Day 23) Fuxi SoC without DDR3 在 FPGA 中启动成功
+* (Day 29) 完整版 Fuxi SoC 在 Vivado 中仿真成功、在 FPGA 中启动成功
 
 ## Before 2021
 
@@ -1203,4 +1204,46 @@ qwq 先睡了，明天继续
 
 1. 继续使用 DDR3 调试代码探究使 DDR3 正常工作的条件
 2. 修改 Fuxi SoC 的时钟及 DDR3 配置，使其可以正常仿真
+
+## Day 29 2021-01-29
+
+昨天晚上的一些错误是由于我没有改正 `SoC_tb.v` 里仿真的时钟频率导致的，这里说明一下，Fuxi SoC 的连接是没有问题的，是我没有改仿真代码 orz
+
+由于 `ddr3_dq` 和 `ddr3_dqs_p` 以及 `ddr3_dqs_n` 是双向的，所以不知道改变是从哪边引起的，调试起来就比较麻烦，有没有办法直到是由哪边改变的呢
+
+把 debug 代码里的 `top.v` 里以上三个管脚从 `inout` 改成 `input`，不影响初始化，改成 `output` 也不影响初始化；加上 `ResetSynchronizer.v` 也不影响，这是在逼我从头构建一遍吗...
+
+我又试着构建了一个带 BD 的 debug 用 example，一开始只有 DDR3，可以初始化；后来加上 Clocking Wizard，可以初始化；再加上 System Processor Reset，可以初始化
+
+写到这里突发奇想，把 Fuxi SoC 里的 DDR3 删掉再重新创建一次，结果并没有什么用处
+
+又观察了一会儿，发现 Fuxi SoC 的 `soc.v` 里漏掉了 DDR3 的 `cs_n` 信号，加之，一切正常！
+
+多仿真了一会儿，`init_calib_complete` 在 215.4475 us 成功拉上去
+
+总结一下，之前失败的原因：
+
+1. 我没有改仿真代码里的时钟频率，导致仿真的时钟频率跟 Clocking Wizard 需求的时钟频率不匹配
+2. Fuxi SoC 的 `SoC.v` 里遗漏 DDR3 的 `DDR3_cs_n` 信号，导致 DDR3 无法输出
+
+现在仿真成功了，烧到板子也一次成功！
+
+这 29 天也学到了好多东西，学会了如何挑选购买 FPGA，学会了 Vivado 的基本使用，了解了 SoC 的构建过程，也总结了不少经验教训
+
+今天先到这，休息！
+
+### Day 29 进展
+
+* Fuxi SoC with DDR3 仿真成功
+* Fuxi SoC with DDR3 在板子上启动成功
+
+### Day 30 计划
+
+1. 让 GeeOS 在 FPGA 上启动（使用串口或 Flash）
+2. 移植 OpenSBI
+3. 移植 xv6
+
+定的计划有点多了，慢慢来吧。此外，似乎移植 u-boot 还需要写不少代码，这个等完成前几项再说吧
+
+rCore 就先不移植了吧，毕竟这是 RV64 的，而且 Rust 只支持 RISC-V 的 imac 和 gc 扩展，并不支持 ima 而没有 RVC 的指令集
 
