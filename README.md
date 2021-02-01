@@ -7,7 +7,7 @@
 * (Day 5) GeeOS 在 QEMU 中运行成功
 * (Day 22) Fuxi SoC without DDR3 在 Vivado 中仿真成功
 * (Day 23) Fuxi SoC without DDR3 在 FPGA 中启动成功
-* (Day 29) 完整版 Fuxi SoC 在 Vivado 中仿真成功、在 FPGA 中启动成功
+* (Day 29) Fuxi SoC 在 Vivado 中仿真成功、在 FPGA 中启动成功
 * (Day 31) 在运行 Fuxi SoC 的 FPGA 上通过 UART 启动 GeeOS 成功
 
 ## [Before 2021](2021-0.md)
@@ -50,4 +50,6 @@
 * 深入学习操作系统知识
 * 继续学习编译原理
 * 完成 OSCOMP proj5 的前两题
+
+## [Feburary](2021-2.md)
 
