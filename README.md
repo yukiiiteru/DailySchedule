@@ -9,6 +9,7 @@
 * (Day 23) Fuxi SoC without DDR3 在 FPGA 中启动成功
 * (Day 29) Fuxi SoC 在 Vivado 中仿真成功、在 FPGA 中启动成功
 * (Day 31) 在运行 Fuxi SoC 的 FPGA 上通过 UART 启动 GeeOS 成功
+* (Day 36) 在运行 Fuxi SoC 的 FPGA 上启动 `fw_jump` 模式的 OpenSBI 成功
 
 ## [Before 2021](2021-0.md)
 
