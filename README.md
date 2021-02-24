@@ -1,5 +1,7 @@
 # 我的 2021 日程记录
 
+2020 年的日程记录见：[DailySchedule\_2020](https://github.com/wfly1998/DailySchedule_2020)
+
 ## 已完成内容
 
 * (Day 4) YuLang 编译成功，可以正常使用
