@@ -12,6 +12,9 @@
 * (Day 29) Fuxi SoC 在 Vivado 中仿真成功、在 FPGA 中启动成功
 * (Day 31) 在运行 Fuxi SoC 的 FPGA 上通过 UART 启动 GeeOS 成功
 * (Day 36) 在运行 Fuxi SoC 的 FPGA 上启动 `fw_jump` 模式的 OpenSBI 成功
+* (Day 55) Fuxi SoC 可以读取 Flash 了，但仍有 bug
+* (Day 81) Fuxi SoC 在 FPGA 上运行，一切正常
+* (Day 85) 在 GeeOS 中实现 Buddy System 成功
 
 ## [Before 2021](2021-0.md)
 
@@ -77,5 +80,5 @@
 * 准备 ICPC 区域赛昆明站
 * 空余时间读书，学编译原理
 
-## [March](2021-03.md)
+## [March](2021-3.md)
 
