@@ -14,7 +14,7 @@
 * (Day 36) 在运行 Fuxi SoC 的 FPGA 上启动 `fw_jump` 模式的 OpenSBI 成功
 * (Day 55) Fuxi SoC 可以读取 Flash 了，但仍有 bug
 * (Day 81) Fuxi SoC 在 FPGA 上运行，一切正常
-* (Day 85) 在 GeeOS 中实现 Buddy System 成功
+* (Day 85) 在 QEMU 环境下，GeeOS 中实现 Buddy System 成功
 
 ## [Before 2021](2021-0.md)
 
@@ -81,4 +81,27 @@
 * 空余时间读书，学编译原理
 
 ## [March](2021-3.md)
+
+### 2021-03 收获
+
+* 读书不多，但是也有收获（说人话：跟上个月一样懒）
+* 完全解决了 Fuxi SoC 中 Flash 的问题
+* 为 GeeOS 实现了 Buddy System
+* 跟 ICPC 队友更好地磨合了
+* 毕业论文所需实验进展过半
+* 体重减轻数公斤
+
+### 2021-03 不足
+
+* 读书太少
+* OSCOMP 没怎么进行
+* 没学编译原理（我好懒 qwq）
+
+### 2021-04 计划
+
+* 尽量肝完毕业论文(?)
+* ICPC 区域赛昆明站争取拿铜
+* 为 GeeOS 实现 `sys_mmap`, `sys_fork`, `sys_execve` 系统调用
+* 尝试为 Fuxi SoC 移植 xv6-rv32
+* 尝试为 GeeOS 移植一些程序，如 `bash`
 
