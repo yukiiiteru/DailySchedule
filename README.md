@@ -101,7 +101,10 @@
 
 * 尽量肝完毕业论文(?)
 * ICPC 区域赛昆明站争取拿铜
+* 为 GeeOS 实现基于优先级的线程调度
 * 为 GeeOS 实现 `sys_mmap`, `sys_fork`, `sys_execve` 系统调用
 * 尝试为 Fuxi SoC 移植 xv6-rv32
 * 尝试为 GeeOS 移植一些程序，如 `bash`
+
+## [April](2021-4.md)
 
