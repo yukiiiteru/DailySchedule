@@ -108,3 +108,30 @@
 
 ## [April](2021-4.md)
 
+### 2021-04 收获
+
+* 为 GeeOS 实现了 `sys_fork`
+* 修复了一些 `sys_fork` 相关的 bug
+* 解决了一些开启 O2 优化后导致的问题
+* 开始学编译原理，顺便做 minidecaf 实验了，感觉良好
+
+### 2021-04 不足
+
+* 基本没读书
+* 毕业论文刚开始，实验进展过慢
+* ICPC 区域赛打铁，而且还是接近铁首...
+* 在 `sys_fork` 上浪费了太多时间，没有实现线程调度和 `sys_mmap` 以及 `sys_execve`
+* 没有给 Fuxi SoC 移植 `xv6-rv32`
+* 没有给 GeeOS 移植 `bash`
+* （总结一下就是基本啥也没错 orz）
+
+### 2021-05 计划
+
+* 必须写完毕业论文了
+* ICPC 省赛保银冲金
+* 战术放弃 GeeOS 部分题目，转战 YuLang 和 Fuxi：
+  * 五一假期做完 minidecaf 实验
+  * 使用 Python 和 antlr4 以及 LLVM 完成 YuLang 的编译器
+  * 时间允许的话，争取实现一下 Fuxi 处理器的 RVC 扩展
+* 多读书！读 Unix 代码，读 KVM 代码
+
