@@ -15,6 +15,9 @@
 * (Day 55) Fuxi SoC 可以读取 Flash 了，但仍有 bug
 * (Day 81) Fuxi SoC 在 FPGA 上运行，一切正常
 * (Day 85) 在 QEMU 环境下，GeeOS 中实现 Buddy System 成功
+* (Day 110) 在 QEMU 环境下，GeeOS 中实现 `sys_fork` 成功
+* (Day 129) ICPC 省赛金牌
+* (Day 167) 毕业论文通过。万事具备，只欠毕业证 (x)
 
 ## [Before 2021](2021-0.md)
 
@@ -155,4 +158,9 @@
 * 读书，读代码，准备入职
 
 ## [June](2021-6.md)
+
+### 2021-06 收获
+
+* 成功在单位附近租到房子
+* 毕业论文通过
 
