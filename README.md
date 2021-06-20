@@ -18,6 +18,7 @@
 * (Day 110) 在 QEMU 环境下，GeeOS 中实现 `sys_fork` 成功
 * (Day 129) ICPC 省赛金牌
 * (Day 167) 毕业论文通过。万事具备，只欠毕业证 (x)
+* (Day 171) 成功晋级 OSCOMP 决赛
 
 ## [Before 2021](2021-0.md)
 
